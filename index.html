@@ -62,6 +62,57 @@
             font-size: 12px;
             color: #666;
         }
+        
+        .map-toggle {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-size: 12px;
+        }
+        
+        .map-toggle button {
+            margin: 2px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .map-toggle button.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .map-toggle button:hover {
+            background: #f0f0f0;
+        }
+        
+        .map-toggle button.active:hover {
+            background: #0056b3;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 2000;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -84,19 +135,36 @@
     </div>
     
     <div class="info-panel">
-        <div>서초구 집계구 및 행정구역 지도</div>
-        <div>마우스 오버로 상세 정보 확인</div>
+        <div>📍 서초구 집계구 및 행정구역 지도</div>
+        <div>💡 체크박스를 클릭하여 레이어를 토글할 수 있습니다</div>
+    </div>
+    
+    <div class="map-toggle">
+        <div style="margin-bottom: 5px; font-weight: bold;">🗺️ 지도 스타일</div>
+        <button id="defaultMap" class="active">기본 지도</button>
+        <button id="cartoMap">간소화 지도</button>
+    </div>
+    
+    <div class="loading" id="loading">
+        <div>🔄 지도 데이터를 로딩 중...</div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 지도 초기화
-        const map = L.map('map').setView([37.4947, 127.0276], 12);
+        // 지도 초기화 (서초구 중심)
+        const map = L.map('map').setView([37.4947, 127.0276], 13);
         
-        // OpenStreetMap 타일 레이어 추가
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // 지도 타일 레이어 정의
+        const defaultMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        });
+        
+        const cartoMapLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO'
+        });
+        
+        // 기본 지도 레이어 추가
+        defaultMapLayer.addTo(map);
         
         // 레이어 그룹 생성
         const 집계구Layer = L.layerGroup();
@@ -123,7 +191,10 @@
         // 데이터 로드 함수
         async function loadData() {
             try {
+                console.log('데이터 로드 시작...');
+                
                 // 집계구 데이터 로드
+                console.log('집계구 데이터 로드 시도...');
                 const 집계구Response = await fetch('./집계구.geojson');
                 if (집계구Response.ok) {
                     const 집계구Data = await 집계구Response.json();
@@ -144,6 +215,7 @@
                 }
                 
                 // 행정구역 데이터 로드
+                console.log('행정구역 데이터 로드 시도...');
                 const 행정구역Response = await fetch('./행정구역.geojson');
                 if (행정구역Response.ok) {
                     const 행정구역Data = await 행정구역Response.json();
@@ -163,12 +235,26 @@
                     console.warn('행정구역.geojson 파일을 찾을 수 없습니다. 상태:', 행정구역Response.status);
                 }
                 
-                // 초기 레이어 표시
-                집계구Layer.addTo(map);
-                행정구역Layer.addTo(map);
+                // 로드된 레이어들을 지도에 추가
+                loadedLayers.forEach(layer => {
+                    map.addLayer(layer);
+                });
+                
+                // 지도 범위 자동 조정
+                if (loadedLayers.length > 0) {
+                    const group = new L.featureGroup(loadedLayers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
+                
+                // 로딩 화면 숨기기
+                document.getElementById('loading').style.display = 'none';
+                
+                console.log('지도 로드 완료. 로드된 레이어 수:', loadedLayers.length);
                 
             } catch (error) {
                 console.error('데이터 로드 중 오류 발생:', error);
+                console.error('오류 상세:', error.message);
+                document.getElementById('loading').style.display = 'none';
             }
         }
         
@@ -187,6 +273,27 @@
             } else {
                 map.removeLayer(행정구역Layer);
             }
+        });
+        
+        // 지도 스타일 토글 이벤트 리스너
+        document.getElementById('defaultMap').addEventListener('click', function() {
+            // 기본 지도로 전환
+            map.removeLayer(cartoMapLayer);
+            map.addLayer(defaultMapLayer);
+            
+            // 버튼 상태 업데이트
+            document.getElementById('defaultMap').classList.add('active');
+            document.getElementById('cartoMap').classList.remove('active');
+        });
+        
+        document.getElementById('cartoMap').addEventListener('click', function() {
+            // 간소화 지도로 전환
+            map.removeLayer(defaultMapLayer);
+            map.addLayer(cartoMapLayer);
+            
+            // 버튼 상태 업데이트
+            document.getElementById('cartoMap').classList.add('active');
+            document.getElementById('defaultMap').classList.remove('active');
         });
         
         // 데이터 로드 시작
