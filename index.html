@@ -242,8 +242,30 @@
                 
                 // 지도 범위 자동 조정
                 if (loadedLayers.length > 0) {
-                    const group = new L.featureGroup(loadedLayers);
-                    map.fitBounds(group.getBounds().pad(0.1));
+                    try {
+                        // 각 레이어 그룹에서 실제 feature들을 수집
+                        const allFeatures = [];
+                        loadedLayers.forEach(layerGroup => {
+                            if (layerGroup && typeof layerGroup.eachLayer === 'function') {
+                                layerGroup.eachLayer(function(feature) {
+                                    if (feature && typeof feature.getLatLng === 'function') {
+                                        allFeatures.push(feature);
+                                    }
+                                });
+                            }
+                        });
+                        
+                        if (allFeatures.length > 0) {
+                            const group = new L.featureGroup(allFeatures);
+                            const bounds = group.getBounds();
+                            if (bounds && bounds.isValid()) {
+                                map.fitBounds(bounds.pad(0.1));
+                            }
+                        }
+                    } catch (boundsError) {
+                        console.warn('지도 범위 자동 조정 중 오류:', boundsError);
+                        // 오류가 발생해도 지도는 정상 작동하도록 함
+                    }
                 }
                 
                 // 로딩 화면 숨기기
