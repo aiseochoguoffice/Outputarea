@@ -195,7 +195,7 @@
                 
                 // 집계구 데이터 로드
                 console.log('집계구 데이터 로드 시도...');
-                const 집계구Response = await fetch('./집계구.geojson');
+                const 집계구Response = await fetch('./area.geojson');
                 if (집계구Response.ok) {
                     const 집계구Data = await 집계구Response.json();
                     console.log('집계구 데이터 로드 성공:', 집계구Data.features.length, '개 레코드');
@@ -211,12 +211,12 @@
                     }).addTo(집계구Layer);
                     loadedLayers.push(집계구Layer);
                 } else {
-                    console.warn('집계구.geojson 파일을 찾을 수 없습니다. 상태:', 집계구Response.status);
+                    console.warn('집계구(geojson) 파일을 찾을 수 없습니다. 상태:', 집계구Response.status);
                 }
                 
                 // 행정구역 데이터 로드
                 console.log('행정구역 데이터 로드 시도...');
-                const 행정구역Response = await fetch('./행정구역.geojson');
+                const 행정구역Response = await fetch('./seocho.geojson');
                 if (행정구역Response.ok) {
                     const 행정구역Data = await 행정구역Response.json();
                     console.log('행정구역 데이터 로드 성공:', 행정구역Data.features.length, '개 레코드');
@@ -232,7 +232,7 @@
                     }).addTo(행정구역Layer);
                     loadedLayers.push(행정구역Layer);
                 } else {
-                    console.warn('행정구역.geojson 파일을 찾을 수 없습니다. 상태:', 행정구역Response.status);
+                    console.warn('행정구역(geojson) 파일을 찾을 수 없습니다. 상태:', 행정구역Response.status);
                 }
                 
                 // 로드된 레이어들을 지도에 추가
