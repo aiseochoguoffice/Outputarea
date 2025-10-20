@@ -1,0 +1,16 @@
+{
+  "name": "seocho-gu-map",
+  "version": "1.0.0",
+  "description": "서초구 집계구 및 행정구역 지도 시각화",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": ["map", "geojson", "seoul", "seocho", "korea"],
+  "author": "aiseochoguoffice",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
