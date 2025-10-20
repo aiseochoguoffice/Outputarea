@@ -151,8 +151,8 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 지도 초기화 (서초구 중심)
-        const map = L.map('map').setView([37.4947, 127.0276], 13);
+        // 지도 초기화 (서초구 중심 - 오른쪽 100px, 아래 150px 이동)
+        const map = L.map('map').setView([37.4750, 127.0375], 13);
         
         // 지도 타일 레이어 정의
         const defaultMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
